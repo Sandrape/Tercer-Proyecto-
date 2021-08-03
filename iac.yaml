@@ -3,7 +3,21 @@ Description: ---
 Metadata: 
 
 Parameters: 
+AWSTemplateFormatVersion: 2010-09-09
+Description: 
+Metadata: 
 
+Parameters: 
+
+Mappings: 
+
+Conditions: 
+
+Resources:
+aws ec2 create-vpc --cidr-block 10.0.0.0/16 
+ 
+
+Outputs:
 Mappings: 
 
 Conditions: 
