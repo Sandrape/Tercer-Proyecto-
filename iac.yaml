@@ -1,9 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: ---
+Description: ---Ingrid Aroody Prueba 
 Metadata: 
 
 Parameters: 
-
 Mappings: 
 
 Conditions: 
