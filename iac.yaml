@@ -3,25 +3,18 @@ Description: ---
 Metadata: 
 
 Parameters: 
-AWSTemplateFormatVersion: 2010-09-09
-Description: 
-Metadata: 
 
-Parameters: 
-
-Mappings: 
-
-Conditions: 
-
-Resources:
-aws ec2 create-vpc --cidr-block 192.168.50.10/16 
- 
-
-Outputs:
 Mappings: 
 
 Conditions: 
 
 Resources: 
-
+VPCTercerProyecto:
+  Type: AWS::EC2::VPC
+  Properties:
+    CidrBlock: 172.50.0.0/16
+    EnableDnsSupport: true
+    Tags:
+      - Key: name
+        Value: VPCPROYECTO
 Outputs:
