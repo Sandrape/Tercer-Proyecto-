@@ -125,3 +125,119 @@ Resources:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref Tableruteoprivada
  
+  loadbalancersg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "balanceador"
+      GroupDescription: "Security group para el balanceador de carga"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  websg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "web"
+      GroupDescription: "Security group para los servidores web"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  launchTemplate1:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: launchTemplate1 
+      LaunchTemplateData:  
+        DisableApiTermination: true
+        ImageId: ami-002438e556dd03e4c
+        InstanceType: t2.micro
+        KeyName: Sanding
+        SecurityGroupIds: 
+          - !Ref websg
+
+  autoscaling1:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref launchTemplate1
+        Version: !GetAtt launchTemplate1.LatestVersionNumber
+      MaxSize: 4
+      MinSize: 1
+      DesiredCapacity: 2
+      HealthCheckGracePeriod: 300
+      MaxInstanceLifetime: 2592000
+      TargetGroupARNs:
+        - !Ref grupo1
+      Tags:
+        - Key: Name
+          Value: nginx
+          PropagateAtLaunch: True
+
+  grupo1:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: '/'
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 4
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Port: 80
+      Protocol: HTTP
+      VpcId: !Ref VPC
+      TargetType: instance  
+
+  ListenerRule1:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref grupo1
+      Conditions:
+        - Field: http-request-method
+          HttpRequestMethodConfig:
+            Values:
+              - GET_OR_HEAD
+      ListenerArn: !Ref healthcheck
+      Priority: 1 
+
+  healthcheck:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref grupo1
+      LoadBalancerArn: !Ref balanceador
+      Port: 80
+      Protocol: HTTP  
+
+  balanceador:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SecurityGroups: 
+        - !Ref loadbalancersg
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      Type: application
