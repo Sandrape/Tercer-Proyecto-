@@ -9,5 +9,12 @@ Mappings:
 Conditions: 
 
 Resources: 
-
+VPCTercerProyecto:
+  Type: AWS::EC2::VPC
+  Properties:
+    CidrBlock: 172.50.0.0/16
+    EnableDnsSupport: true
+    Tags:
+      - Key: name
+        Value: VPCPROYECTO
 Outputs:

@@ -1,0 +1,127 @@
+Description: Template para la Unidad 3
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.60.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: IG
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: 172.60.10.0/24
+      MapPublicIpOnLaunch: true
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: 172.60.20.0/24
+      MapPublicIpOnLaunch: true
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: 172.60.30.0/24
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: 172.60.40.0/24
+      MapPublicIpOnLaunch: false
+
+  NatGateway1eip:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway2eip:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+
+  Natgateway1:
+    Type :   AWS::EC2::NatGateway     
+    Properties:
+      AllocationId: !GetAtt NatGateway1eip.AllocationId
+      SubnetId: !Ref PrivateSubnet1
+  
+  Natgateway2:
+    Type :   AWS::EC2::NatGateway     
+    Properties:
+      AllocationId: !GetAtt NatGateway2eip.AllocationId
+      SubnetId: !Ref PrivateSubnet2
+  
+  Tableruteopublica:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  
+  Rutapordefectopublica:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref Tableruteopublica
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  
+  Tablapublicaasociacion1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref Tableruteopublica
+  
+  Tablapublicaasociacion2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref Tableruteopublica
+  
+  Tableruteoprivada:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+  
+  Rutapordefectoprivada:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref Tableruteoprivada
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref Natgateway1
+  
+  Tablaprivadaasociacion1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref Tableruteoprivada
+  
+  Tablaprivadaasociacion2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref Tableruteoprivada
+ 
